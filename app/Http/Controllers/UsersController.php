@@ -40,6 +40,10 @@ class UsersController extends Controller
 
     public function calendarUsers()
     {
+        if (!auth()->user()->can('absence-view')) {
+            session()->flash('flash_message_warning', __('You do not have permission to view this page'));
+            return redirect()->back();
+        }
         return User::with(['department', 'absences' =>  function ($q) {
             return $q->whereBetween('start_at', [today()->subWeeks(2)->startOfDay(), today()->addWeeks(4)->endOfDay()])
                       ->orWhereBetween('end_at', [today()->subWeeks(2)->startOfDay(), today()->addWeeks(4)->endOfDay()]);
@@ -54,12 +58,9 @@ class UsersController extends Controller
 
     public function anyData()
     {
-        $canUpdateUser = auth()->user()->can('update-user');
         $users = User::select(['id', 'external_id', 'name', 'email', 'primary_number']);
         return Datatables::of($users)
-            ->addColumn('namelink', function ($users) {
-                return '<a href="/users/' . $users->external_id . '" ">' . $users->name . '</a>';
-            })
+            ->addColumn('namelink', '<a href="{{ route("users.show",[$external_id]) }}">{{$name}}</a>')
             ->addColumn('view', function ($user) {
                 return '<a href="' . route("users.show", $user->external_id) . '" class="btn btn-link">' . __('View') .'</a>';
             })
@@ -85,9 +86,7 @@ class UsersController extends Controller
         )
             ->where('user_assigned_id', $id)->get();
         return Datatables::of($tasks)
-            ->addColumn('titlelink', function ($tasks) {
-                return '<a href="' . route('tasks.show', $tasks->external_id) . '">' . $tasks->title . '</a>';
-            })
+            ->addColumn('titlelink', '<a href="{{ route("tasks.show",[$external_id]) }}">{{$title}}</a>')
             ->editColumn('created_at', function ($tasks) {
                 return $tasks->created_at ? with(new Carbon($tasks->created_at))
                     ->format(carbonDate()) : '';
@@ -118,9 +117,7 @@ class UsersController extends Controller
         )
             ->where('user_assigned_id', $id)->get();
         return Datatables::of($leads)
-            ->addColumn('titlelink', function ($leads) {
-                return '<a href="' . route('leads.show', $leads->external_id) . '">' . $leads->title . '</a>';
-            })
+            ->addColumn('titlelink', '<a href="{{ route("leads.show",[$external_id]) }}">{{$title}}</a>')
             ->editColumn('created_at', function ($leads) {
                 return $leads->created_at ? with(new Carbon($leads->created_at))
                     ->format(carbonDate()) : '';
@@ -251,6 +248,12 @@ class UsersController extends Controller
         $password = bcrypt($request->password);
         $role = $request->roles;
         $department = $request->departments;
+
+        if( !auth()->user()->canChangePasswordOn($user) ) {
+            unset($request['password']);
+        }
+
+
         if ($request->hasFile('image_path')) {
             $companyname = Setting::first()->external_id;
             $file =  $request->file('image_path');
@@ -280,7 +283,9 @@ class UsersController extends Controller
         if ($role && $role->name == Role::OWNER_ROLE && $owners->count() <= 1) {
             Session()->flash('flash_message_warning', __('Not able to change owner role, please choose a new owner first'));
         } else {
-            $user->roles()->sync([$request->roles]);
+            if(auth()->user()->canChangeRole() ) {
+                $user->roles()->sync([$request->roles]);
+            }
         }
         $user->department()->sync([$department]);
 

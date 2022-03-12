@@ -62,19 +62,39 @@
     <hr>
 </div>
 
+@if(isset($user))
+    @if(auth()->user()->canChangePasswordOn($user))
+    <div class="col-sm-3">
+        <label for="name" class="base-input-label">@lang('Security')</label>
+    </div>
+
+    <div class="col-sm-9">
+        <div class="form-group col-sm-8">
+            <label for="password" class="control-label thin-weight">@lang('Password')</label>
+            <input type="password" name="password" class="form-control" value="">
+        </div>
+        <div class="form-group col-sm-8">
+            <label for="password_confirmation" class="control-label thin-weight">@lang('Confirm password')</label>
+            <input type="password" name="password_confirmation" class="form-control" value="">
+        </div>
+    </div>
+    @endif
+@else 
 <div class="col-sm-3">
-    <label for="name" class="base-input-label">@lang('Security')</label>
-</div>
-<div class="col-sm-9">
-    <div class="form-group col-sm-8">
-        <label for="password" class="control-label thin-weight">@lang('Password')</label>
-        <input type="password" name="password" class="form-control" value="">
+        <label for="name" class="base-input-label">@lang('Security')</label>
     </div>
-    <div class="form-group col-sm-8">
-        <label for="password_confirmation" class="control-label thin-weight">@lang('Confirm password')</label>
-        <input type="password" name="password_confirmation" class="form-control" value="">
+
+    <div class="col-sm-9">
+        <div class="form-group col-sm-8">
+            <label for="password" class="control-label thin-weight">@lang('Password')</label>
+            <input type="password" name="password" class="form-control" value="">
+        </div>
+        <div class="form-group col-sm-8">
+            <label for="password_confirmation" class="control-label thin-weight">@lang('Confirm password')</label>
+            <input type="password" name="password_confirmation" class="form-control" value="">
+        </div>
     </div>
-</div>
+@endif
 <div class="col-sm-12">
     <hr>
 </div>
@@ -82,6 +102,7 @@
     <label for="name" class="base-input-label">@lang('Access')</label>
 </div>
 <div class="col-sm-9">
+@if(auth()->user()->canChangeRole())
     <div class="form-group col-sm-8">
         <label for="roles" class="control-label thin-weight">@lang('Assign role')</label>
         <select name="roles" id="" class="form-control">
@@ -90,6 +111,7 @@
         @endforeach
         </select>
     </div>
+@endif
     <div class="form-group col-sm-8">
         <label for="departments" class="control-label thin-weight">@lang('Assign department')</label>
         <select name="departments" id="" class="form-control">

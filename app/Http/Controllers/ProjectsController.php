@@ -31,9 +31,7 @@ class ProjectsController extends Controller
         )->get();
 
         return Datatables::of($projects)
-            ->addColumn('titlelink', function ($projects) {
-                return '<a href="projects/' . $projects->external_id . '" ">' . $projects->title . '</a>';
-            })
+            ->addColumn('titlelink', '<a href="{{ route("projects.show",[$external_id]) }}">{{$title}}</a>')
             ->editColumn('client', function ($projects) {
                 return $projects->client->company_name;
             })
@@ -135,7 +133,7 @@ class ProjectsController extends Controller
         $filename = str_random(8) . '_' . $file->getClientOriginalName();
         $fileOrginal = $file->getClientOriginalName();
 
-        $size = $file->getClientSize();
+        $size = $file->getSize();
         $mbsize = $size / 1048576;
         $totaltsize = substr($mbsize, 0, 4);
 
@@ -202,7 +200,7 @@ class ProjectsController extends Controller
 
         return view('projects.show')
             ->withProject($project)
-            ->withStatuses(Status::typeOfTask()->get())
+            ->withStatuses(Status::typeOfProject()->get())
             ->withTasks($project->tasks)
             ->withCompletionPercentage($completionPercentage)
             ->withCollaborators($collaborators->unique())
